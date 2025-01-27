@@ -1,0 +1,25 @@
+# Este arquivo é responsavel por subir o container docker que estará  o banco de dados e aqui voce pode configurar o mesmo
+# nele você pode configurar o nome do usuario senha e nome do banco de dados sinta-se a vontadade para fazer alterações
+
+# Para subir o banco de dados no seu ambiente docker basta executar o seguinte comando no terminal " docker-compose up -d "
+# Feito isso voce ja poderá acessarr o banco de dados
+
+# !! Se você não fizer nenhuma alteração o arquivo já estará compativel com a URL no arquivo .env.example !!
+# Ao fazer alguma alteração e necessario tambem alterar o arquivo com as variaves de ambiente o .env.example
+ 
+version: "3.8"
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: backend_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
