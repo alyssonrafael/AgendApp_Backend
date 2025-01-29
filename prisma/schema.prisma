@@ -7,7 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Teste {
-  id   Int @id @default(autoincrement()) 
-  nome String
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String?  // Pode ser nulo para clientes com login via Google
+  name      String
+  role      Role     @default(CLIENT)
+  provider  Boolean  @default(false) // Define se o usuário oferece serviços
+  googleId  String?  // Usado para login com Google
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  CLIENT
+  PROVIDER
+  ADMIN
 }
