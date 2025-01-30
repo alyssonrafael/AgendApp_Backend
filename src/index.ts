@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import prisma from "./prisma"; // Importando a instância do Prisma Client
 import authRoutes from "./routes/authRoutes";
+import passport from "passport";
 
 dotenv.config();
 
@@ -12,6 +13,8 @@ const PORT = process.env.PORT || 3000;
 
 // Usando o middleware CORS
 app.use(cors());
+// ussando o passport para possibilitar o login com o google
+app.use(passport.initialize());
 
 //Usando as rotas
 app.use('/api/auth', authRoutes);
