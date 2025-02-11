@@ -11,7 +11,7 @@ export const comparePassword = async (password: string, hashedPassword: string):
 };
 
 const SECRET_KEY = process.env.JWT_SECRET || 'default_secret_key'; // Use uma variável de ambiente para o segredo
-const EXPIRES_IN = '8h'; // Tempo de expiração do token
+const EXPIRES_IN = '7d'; // Tempo de expiração do token
 
 export const generateToken = (payload: object): string => {
   return jwt.sign(payload, SECRET_KEY, { expiresIn: EXPIRES_IN });

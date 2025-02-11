@@ -12,12 +12,15 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // Usando o middleware CORS
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:8081", "exp://10.0.0.20:8081"], // Permite o Expo acessar o backend
+  methods: ["GET", "POST", "PUT", "DELETE"], //  Métodos HTTP permitidos
+}));
 // ussando o passport para possibilitar o login com o google
 app.use(passport.initialize());
 
 //Usando as rotas
-app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
 
 // Função para testar a conexão
 const testConnection = async () => {
