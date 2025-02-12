@@ -25,7 +25,7 @@ export const registerUser = async (
     // Verifica se o e-mail já está em uso
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      res.status(400).json({ error: "Email is already in use" });
+      res.status(409).json({ error: "Email is already in use" });
       return;
     }
     // aguarda a senha ser criptografada
@@ -150,7 +150,7 @@ export const registerEmpresa = async (req: Request, res: Response) => {
     });
 
     if (nomeEmpresaExistente) {
-      res.status(400).json({ error: "Company name is already in use." });
+      res.status(409).json({ error: "Company name is already in use." });
       return;
     }
 
@@ -192,7 +192,7 @@ export const loginEmpresa = async (req: Request, res: Response) => {
     // Verifica a senha
     const senhaCorreta = await bcrypt.compare(password, empresa.password);
     if (!senhaCorreta) {
-      res.status(400).json({ error: "Invalid credentials" });
+      res.status(401).json({ error: "Invalid credentials" });
       return;
     }
 
@@ -203,7 +203,7 @@ export const loginEmpresa = async (req: Request, res: Response) => {
       name: empresa.name,
     });
 
-    res.json({ message: "Login successful", token, empresa });
+    res.json({ message: "Login successful", token });
     return;
   } catch (error) {
     res.status(500).json({ error: "Error during login" });
