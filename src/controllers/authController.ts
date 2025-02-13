@@ -231,8 +231,8 @@ const sendResetTokenAndEmail = async (
   // Envia o e-mail com o código de recuperação
   await sendRecoveryEmail(email, token);
 
-  // Retorna a resposta com a mensagem personalizada
-  res.status(200).json({ message });
+  // Retorna a resposta com a mensagem personalizada o res usa o status que vem da funçao primaria abaixo
+  res.json({ message });
   return;
 };
 
@@ -250,13 +250,13 @@ export const forgotPassword = async (req: Request, res: Response) => {
       return;
     }
 
-    // Se for um usuário com GoogleID, não permite redefinir a senha
+    // Se for um usuário com """ GoogleID """, não permite redefinir a senha
     if (user && user.googleId) {
       if (empresa) {
         // Caso o e-mail também seja de uma empresa, permite redefinir a senha da empresa
         sendResetTokenAndEmail(
           email,
-          res,
+          res.status(207),
           "This email belongs to more than one account type. Confirm in the next step which type you want to change."
         );
         return;
@@ -269,9 +269,22 @@ export const forgotPassword = async (req: Request, res: Response) => {
       });
       return;
     }
+    //se nao tiver conta no googleid mais tiver conta de empresa e de usuario
+    if (user && empresa) {
+      sendResetTokenAndEmail(
+        email,
+        res.status(207),
+        "This email belongs to more than one account type. Confirm in the next step which type you want to change."
+      );
+      return;
+    }
 
-    // Se o usuário não tiver GoogleID, cria o token e envia o e-mail
-    sendResetTokenAndEmail(email, res, "Recovery code sent to email.");
+    // Se o usuário não tiver GoogleID e so tiver um tipo de conta, cria o token e envia o e-mail
+    sendResetTokenAndEmail(
+      email,
+      res.status(200),
+      "Recovery code sent to email."
+    );
     return;
   } catch (error) {
     res.status(500).json({ message: "Error processing request." });
@@ -294,6 +307,7 @@ export const resetPassword = async (req: Request, res: Response) => {
       where: { email },
     });
 
+    // quando nao houver token para recuperaçao
     if (!resetToken) {
       res.status(400).json({ message: "Token not found." });
       return;
@@ -301,7 +315,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     // Verifica se o token é válido e se não expirou
     if (resetToken.token !== token || new Date() > resetToken.expiresAt) {
-      res.status(400).json({ message: "Invalid or expired token." });
+      res.status(403).json({ message: "Invalid or expired token." });
       return;
     }
 
@@ -310,7 +324,7 @@ export const resetPassword = async (req: Request, res: Response) => {
       const user = await prisma.user.findUnique({ where: { email } });
 
       if (user && user.googleId) {
-        res.status(400).json({
+        res.status(409).json({
           message:
             "This account was created with Google. Sign in with Google to access your account.",
         });
@@ -337,14 +351,14 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     // Verifica se alguma conta foi atualizada
     if (updated.count === 0) {
-      res.status(404).json({ message: "Account not found." });
+      res.status(406).json({ message: "Account not found." });
       return;
     }
 
     // Remove o token usado
     await prisma.passwordResetToken.delete({ where: { email } });
 
-    res.json({ message: "Password reset successfully!" });
+    res.status(200).json({ message: "Password reset successfully!" });
     return;
   } catch (error) {
     console.error("Error resetting password:", error);
