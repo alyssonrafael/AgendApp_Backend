@@ -25,3 +25,12 @@ export const verifyToken = (token: string): object | null | undefined => {
     return null;
   }
 };
+//decodifica o token e volta os dados do payload
+export const decodeToken = (token: string): object | null => {
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY) as object; 
+    return decoded;
+  } catch (error) {
+    return null; // Retorna null se o token for inválido
+  }
+};

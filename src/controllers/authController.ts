@@ -72,6 +72,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const token = generateToken({
       id: user.id,
       name: user.name,
+      googleAuth: !user.googleId
     });
 
     res.status(200).json({ message: "Login successful", token });
@@ -132,7 +133,7 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
 //AUTH empresa
 export const registerEmpresa = async (req: Request, res: Response) => {
   try {
-    const { email, password, name, nomeEmpresa, image } = req.body;
+    const { email, password, name, nomeEmpresa } = req.body;
 
     // Verifica se o e-mail já existe
     const empresaExistente = await prisma.empresa.findUnique({
