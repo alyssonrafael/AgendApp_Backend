@@ -100,3 +100,41 @@ export const updateUser = async (
     res.status(500).json({ error: "Error updating user" });
   }
 };
+
+export const getUser = async (req: Request, res: Response): Promise<void> => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+
+  if (!token) {
+    res.status(401).json({ error: "Token is required" });
+    return;
+  }
+
+  try {
+    const decoded = decodeToken(token);
+    if (!decoded || typeof decoded !== "object" || !("id" in decoded)) {
+      res.status(401).json({ error: "Invalid token" });
+      return;
+    }
+
+    const userId = (decoded as { id: string }).id;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

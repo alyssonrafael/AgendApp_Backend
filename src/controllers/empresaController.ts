@@ -182,3 +182,47 @@ export const uploadFotoEmpresa = async (
     res.status(500).json({ error: "Error uploading image" });
   }
 };
+
+export const getEmpresa = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+
+  if (!token) {
+    res.status(401).json({ error: "Token is required" });
+    return;
+  }
+
+  try {
+    const decoded = decodeToken(token);
+    if (!decoded || typeof decoded !== "object" || !("id" in decoded)) {
+      res.status(401).json({ error: "Invalid token" });
+      return;
+    }
+
+    const empresaId = (decoded as { id: string }).id;
+
+    const empresa = await prisma.empresa.findUnique({
+      where: { id: empresaId },
+      select: {
+        name:true,
+        nomeEmpresa: true,
+        email: true,
+        createdAt: true,
+        description:true,
+        image:true
+      },
+    });
+
+    if (!empresa) {
+      res.status(404).json({ error: "empresa not found" });
+      return;
+    }
+
+    res.status(200).json(empresa);
+  } catch (error) {
+    console.error("Error fetching empresa:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}

@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes";
 import passport from "passport";
 import userRoutes from "./routes/userRoutes";
 import empresaRoutes from "./routes/empresaRoutes";
+import path from "path";
 
 dotenv.config();
 
@@ -21,6 +22,8 @@ app.use(cors({
 }));
 // ussando o passport para possibilitar o login com o google
 app.use(passport.initialize());
+// Servindo a pasta de uploads como estática
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 //Usando as rotas
 app.use("/api/auth", authRoutes);

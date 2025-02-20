@@ -193,7 +193,7 @@ export const loginEmpresa = async (req: Request, res: Response) => {
     // Verifica a senha
     const senhaCorreta = await bcrypt.compare(password, empresa.password);
     if (!senhaCorreta) {
-      res.status(401).json({ error: "Invalid credentials" });
+      res.status(400).json({ error: "Invalid credentials" });
       return;
     }
 
