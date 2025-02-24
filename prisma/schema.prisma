@@ -15,6 +15,8 @@ model User {
   googleId  String?  // Usado para login com Google
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // Relacionamento com agendamentos
+  agendamentos Agendamento[] // Um cliente pode ter vários agendamentos
 }
 
 model Empresa {
@@ -27,6 +29,10 @@ model Empresa {
   description String?  // Pode ser nulo
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+   // Relacionamentos
+  servicos         Servico[]             // Serviços oferecidos pela empresa
+  horarios         GradeHorario[]        // Grade de horários configurada pela empresa
+  indisponibilidades Indisponibilidade[] // Bloqueios manuais de horário
 }
 
 model PasswordResetToken {
@@ -34,4 +40,48 @@ model PasswordResetToken {
   email     String   @unique
   token     String
   expiresAt DateTime
+}
+
+model Servico {
+  id            String         @id @default(uuid())
+  nome          String
+  descricao     String?
+  ativo         Boolean        @default(true) //soft delete
+  duracao       Int            // Duração em minutos
+  custo         Float          // Preço do serviço
+  empresaId     String
+  empresa       Empresa        @relation(fields: [empresaId], references: [id])
+  agendamentos  Agendamento[]  // Relacionamento com agendamentos desse serviço
+  createdAt     DateTime       @default(now())
+  @@unique([nome, empresaId])  // Adiciona um índice único composto
+}
+model GradeHorario {
+  id          String   @id @default(uuid())
+  diaSemana   Int      // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+  inicio      String   // Ex: "08:00"
+  fim         String   // Ex: "18:00"
+  intervalo   Int      // Intervalo em minutos (ex: 30 para meia hora)
+  empresaId   String
+  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+}
+
+model Agendamento {
+  id          String   @id @default(uuid())
+  data        DateTime // Data específica do agendamento
+  horario     String   // Ex: "09:30"
+  ativo       Boolean  @default(true) // Soft delete
+  clienteId   String
+  cliente     User     @relation(fields: [clienteId], references: [id]) // Relacionamento com o cliente (User)
+  servicoId   String
+  servico     Servico  @relation(fields: [servicoId], references: [id]) // Relacionamento com o serviço escolhido
+  createdAt   DateTime @default(now())
+}
+
+model Indisponibilidade {
+  id          String   @id @default(uuid())
+  data        DateTime // Data específica da indisponibilidade
+  horario     String   // Ex: "14:00"
+  empresaId   String
+  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+  motivo      String?  // Opcional, para descrever o motivo do bloqueio
 }
