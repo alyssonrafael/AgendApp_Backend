@@ -8,6 +8,7 @@ import userRoutes from "./routes/userRoutes";
 import empresaRoutes from "./routes/empresaRoutes";
 import servicoRoutes from "./routes/servicoRoutes";
 import path from "path";
+import gradeHorariosRoutes from "./routes/gradeHorariosRoutes";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", empresaRoutes);
 app.use("/api", servicoRoutes);
+app.use("/api", gradeHorariosRoutes);
 
 // Função para testar a conexão
 const testConnection = async () => {

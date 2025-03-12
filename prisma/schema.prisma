@@ -79,7 +79,7 @@ model Agendamento {
 
 model Indisponibilidade {
   id          String   @id @default(uuid())
-  data        DateTime // Data específica da indisponibilidade
+  data        DateTime? // Data específica da indisponibilidade
   horario     String   // Ex: "14:00"
   empresaId   String
   empresa     Empresa  @relation(fields: [empresaId], references: [id])
