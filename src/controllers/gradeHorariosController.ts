@@ -137,7 +137,7 @@ export const listarHorariosDisponiveis = async (
       horaAtual = format(proximoHorario, "HH:mm");
     }
 
-    // Obtém os agendamentos para o dia solicitado
+    // Obtém os agendamentos para o dia solicitado, incluindo a duração do serviço
     const agendamentos = await prisma.agendamento.findMany({
       where: {
         data: new Date(data as string),
@@ -145,8 +145,12 @@ export const listarHorariosDisponiveis = async (
           empresaId: empresaId as string,
         },
       },
-      select: {
-        horario: true,
+      include: {
+        servico: {
+          select: {
+            duracao: true, // Inclui a duração do serviço
+          },
+        },
       },
     });
 
@@ -163,7 +167,26 @@ export const listarHorariosDisponiveis = async (
 
     // Marca os horários ocupados e indisponíveis
     const horariosComStatus = horarios.map((horario) => {
-      const ocupado = agendamentos.some((ag) => ag.horario === horario);
+      // Verifica se o horário está ocupado por algum agendamento
+      const ocupado = agendamentos.some((agendamento) => {
+        const [horaAgendamento, minutoAgendamento] = agendamento.horario.split(":").map(Number);
+        const horarioAgendamento = new Date(0, 0, 0, horaAgendamento, minutoAgendamento);
+
+        // Calcula o horário de término do agendamento
+        const horarioFimAgendamento = addMinutes(
+          horarioAgendamento,
+          agendamento.servico.duracao
+        );
+
+        // Verifica se o horário atual está dentro do intervalo do agendamento
+        const [horaAtual, minutoAtual] = horario.split(":").map(Number);
+        const horarioAtual = new Date(0, 0, 0, horaAtual, minutoAtual);
+
+        return (
+          horarioAtual >= horarioAgendamento &&
+          horarioAtual < horarioFimAgendamento
+        );
+      });
 
       // Verifica se o horário está dentro de um período de indisponibilidade
       const indisponivel = indisponibilidades.some((indisponibilidade) => {
