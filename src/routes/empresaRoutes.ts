@@ -5,12 +5,14 @@ import {
   uploadFotoEmpresa,
 } from "../controllers/empresaController";
 import { uploadFotoMiddleware } from "../middlewares/uploadFotoMiddleware";
+import { autenticarToken } from "../middlewares/authMiddleware";
+import { validarEntradaUpdateEmpresa } from "../middlewares/empresaMiddleware";
 
 const router = Router();
 
-router.get("/companyPerfil", getEmpresa);
-router.put("/update/company", updateEmpresa);
+router.get("/companyPerfil", autenticarToken, getEmpresa);
+router.put("/update/company", autenticarToken, validarEntradaUpdateEmpresa, updateEmpresa);
 // Rota para upload de fotos da empresa usando o midleware para uma unica foto
-router.post("/company/upload-foto", uploadFotoMiddleware, uploadFotoEmpresa);
+router.post("/company/upload-foto", autenticarToken, uploadFotoMiddleware, uploadFotoEmpresa);
 
 export default router;
