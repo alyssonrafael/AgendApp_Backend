@@ -42,13 +42,14 @@ export const criarServico = async (req: Request, res: Response) => {
     return;
   }
 };
-// Função para listar serviços de uma empresa apenas os desativados
-export const listarServicosDesativadosPorEmpresa = async (
+//Função para listar os serviços da empresa logada. ativos e não ativos
+export const listarServicosPorEmpresaLogada = async (
   req: Request,
   res: Response
 ) => {
-  const { empresaId } = req.params; // Extrai o empresaId da URL. O id da empresa!!
   try {
+    //recupera o id pelo middleware de altenticação
+    const empresaId = (req as any).usuario.id;
     // Verifica se o empresaId é válido
     if (!empresaId) {
       res.status(400).json({ error: "Company ID is required" });
@@ -58,7 +59,6 @@ export const listarServicosDesativadosPorEmpresa = async (
     const servicos = await prisma.servico.findMany({
       where: {
         empresaId: empresaId,
-        ativo: false,
       },
       orderBy: {
         nome: "asc", //ordena em ordem alfabetica (A-Z)
@@ -77,6 +77,7 @@ export const listarServicosDesativadosPorEmpresa = async (
     return;
   }
 };
+// Função para listar serviços de uma empresa apenas os ativados com base no id rota usada por clientes
 export const listarServicosPorEmpresa = async (req: Request, res: Response) => {
   const { empresaId } = req.params; // Extrai o empresaId da URL. O id da empresa!!
   try {
@@ -137,7 +138,7 @@ export const listarServicoPorId = async (req: Request, res: Response) => {
     return;
   }
 };
-// Função para atualizar um serviço
+// Função para atualizar um serviço podendo atualizar 1 dado por vez
 export const atualizarServico = async (req: Request, res: Response) => {
   const { id } = req.params; // Extrai o id do serviço!! da URL
   const { nome, descricao, duracao, custo } = req.body;
@@ -159,8 +160,8 @@ export const atualizarServico = async (req: Request, res: Response) => {
       return;
     }
 
-    // Verifica se o nome já existe para a mesma empresa
-    if (nome) {
+    // Verifica se o nome já existe para a mesma empresa e atualiza
+    if (nome !== undefined) {
       const nomeExistente = await prisma.servico.findFirst({
         where: {
           nome,
@@ -173,25 +174,40 @@ export const atualizarServico = async (req: Request, res: Response) => {
 
       if (nomeExistente) {
         res
-          .status(400)
+          .status(409)
           .json({ error: "Service name already exists for this company" });
         return;
       }
+
+      await prisma.servico.update({
+        where: { id },
+        data: { nome },
+      });
+    }
+    //atualiza descriçao
+    if (descricao !== undefined) {
+      await prisma.servico.update({
+        where: { id },
+        data: { descricao },
+      });
+    }
+    //atualiza a duraçao
+    if (duracao !== undefined) {
+      await prisma.servico.update({
+        where: { id },
+        data: { duracao },
+      });
+    }
+    //atualiza o custo
+    if (custo !== undefined) {
+      await prisma.servico.update({
+        where: { id },
+        data: { custo },
+      });
     }
 
-    // Atualiza o serviço com os novos dados
-    const servicoAtualizado = await prisma.servico.update({
-      where: { id },
-      data: {
-        nome,
-        descricao,
-        duracao,
-        custo,
-      },
-    });
-
     // Retorna o serviço atualizado
-    res.status(200).json(servicoAtualizado);
+    res.status(200).json({ message: "Service updated successfully" });
     return;
   } catch (error) {
     console.error(error);
