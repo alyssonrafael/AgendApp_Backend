@@ -285,7 +285,8 @@ export const listarAgendamentosPorUsuario = async (
         custo: agendamento.servico.custo,
         empresa: {
           nomeEmpresa: agendamento.servico.empresa.nomeEmpresa,
-          description: agendamento.servico.empresa.description,
+          email:agendamento.servico.empresa.email,
+          telefone:agendamento.servico.empresa.phoneNumber,
         },
       },
     }));
@@ -411,7 +412,8 @@ export const listarAgendamentosFuturosPorUsuario = async (
         custo: agendamento.servico.custo,
         empresa: {
           nomeEmpresa: agendamento.servico.empresa.nomeEmpresa,
-          description: agendamento.servico.empresa.description,
+          email:agendamento.servico.empresa.email,
+          telefone:agendamento.servico.empresa.phoneNumber,
         },
       },
     }));
@@ -501,6 +503,8 @@ export const listarAgendamentosDoDiaPorUsuario = async (
         custo: agendamento.servico.custo,
         empresa: {
           nomeEmpresa: agendamento.servico.empresa.nomeEmpresa,
+          email:agendamento.servico.empresa.email,
+          telefone:agendamento.servico.empresa.phoneNumber,
         },
       },
     }));
@@ -633,6 +637,7 @@ export const listarAgendamentosPorEmpresa = async (
       cliente: {
         nome: agendamento.cliente.name,
         email: agendamento.cliente.email,
+        telefone:agendamento.cliente.phoneNumber
       },
       servico: {
         nome: agendamento.servico.nome,
@@ -759,6 +764,7 @@ export const listarAgendamentosFuturosPorEmpresa = async (
       cliente: {
         nome: agendamento.cliente.name,
         email: agendamento.cliente.email,
+        telefone: agendamento.cliente.phoneNumber,
       },
       servico: {
         nome: agendamento.servico.nome,
@@ -848,6 +854,7 @@ export const listarAgendamentosDoDiaPorEmpresa = async (
       cliente: {
         nome: agendamento.cliente.name,
         email: agendamento.cliente.email,
+        telefone: agendamento.cliente.phoneNumber,
       },
       servico: {
         nome: agendamento.servico.nome,
