@@ -87,6 +87,128 @@ export const listarGradeHorarios = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error listing timetable." });
   }
 };
+// Função para listar os horários disponíveis da empresa logada 
+export const listarHorariosDisponiveisEmpresaLogada = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const empresaId = (req as any).usuario.id; // Obtém o ID da empresa do token
+    const { data } = req.query;
+
+    if (!empresaId || !data) {
+      res
+        .status(400)
+        .json({ error: "Company not found in token or date not provided" });
+      return;
+    }
+
+    // Obtém o dia da semana diretamente do getUTCDay (0 = Domingo, 1 = Segunda, ..., 6 = Sábado)
+    const dataISO = new Date(`${data}T00:00:00.000Z`);
+    const diaSemana = dataISO.getUTCDay();
+
+    // Obtém a GradeHorario da empresa para o dia da semana específico
+    const grade = await prisma.gradeHorario.findFirst({
+      where: {
+        empresaId: empresaId as string,
+        diaSemana: diaSemana,
+      },
+    });
+
+    if (!grade) {
+      res
+        .status(404)
+        .json({ error: "Timetable not found for this day." });
+      return;
+    }
+
+    // Gera os horários com base no intervalo
+    const horarios: string[] = [];
+    let horaAtual = grade.inicio;
+
+    while (horaAtual < grade.fim) {
+      horarios.push(horaAtual);
+
+      // Adiciona o intervalo ao horário atual
+      const [hora, minuto] = horaAtual.split(":").map(Number);
+      const proximoHorario = addMinutes(
+        new Date(0, 0, 0, hora, minuto),
+        grade.intervalo
+      );
+      horaAtual = format(proximoHorario, "HH:mm");
+    }
+
+    // Obtém os agendamentos para o dia solicitado, incluindo a duração do serviço
+    const agendamentos = await prisma.agendamento.findMany({
+      where: {
+        data: new Date(data as string),
+        servico: {
+          empresaId: empresaId as string,
+        },
+      },
+      include: {
+        servico: {
+          select: {
+            duracao: true, // Inclui a duração do serviço
+          },
+        },
+      },
+    });
+
+    // Obtém as indisponibilidades para o dia solicitado e as globais (sem data)
+    const indisponibilidades = await prisma.indisponibilidade.findMany({
+      where: {
+        empresaId: empresaId as string,
+        OR: [
+          { data: new Date(data as string) }, // Indisponibilidades específicas para o dia
+          { data: null }, // Indisponibilidades globais (sem data)
+        ],
+      },
+    });
+
+    // Marca os horários ocupados e indisponíveis
+    const horariosComStatus = horarios.map((horario) => {
+      // Verifica se o horário está ocupado por algum agendamento
+      const ocupado = agendamentos.some((agendamento) => {
+        const [horaAgendamento, minutoAgendamento] = agendamento.horario.split(":").map(Number);
+        const horarioAgendamento = new Date(0, 0, 0, horaAgendamento, minutoAgendamento);
+
+        // Calcula o horário de término do agendamento
+        const horarioFimAgendamento = addMinutes(
+          horarioAgendamento,
+          agendamento.servico.duracao
+        );
+
+        // Verifica se o horário atual está dentro do intervalo do agendamento
+        const [horaAtual, minutoAtual] = horario.split(":").map(Number);
+        const horarioAtual = new Date(0, 0, 0, horaAtual, minutoAtual);
+
+        return (
+          horarioAtual >= horarioAgendamento &&
+          horarioAtual < horarioFimAgendamento
+        );
+      });
+
+      // Verifica se o horário está dentro de um período de indisponibilidade
+      const indisponivel = indisponibilidades.some((indisponibilidade) => {
+        const [inicioIndisponivel, fimIndisponivel] =
+          indisponibilidade.horario.split("-");
+        return horario >= inicioIndisponivel && horario < fimIndisponivel;
+      });
+
+      return {
+        horario,
+        ocupado,
+        indisponivel,
+      };
+    });
+
+    res.status(200).json(horariosComStatus);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error listing available times."});
+  }
+};
 // Função para listar os horários disponíveis
 export const listarHorariosDisponiveis = async (
   req: Request,
@@ -428,7 +550,7 @@ export const criarIndisponibilidadeGlobal = async (
     const indisponibilidadeExistente = await prisma.indisponibilidade.findFirst({
       where: {
         empresaId,
-        data: data ? new Date(data) : null, // Se a data não for fornecida, será null (indisponibilidade global)
+        data: data ? new Date(new Date(data).toISOString().split('T')[0]) : null, // Se a data não for fornecida, será null (indisponibilidade global)
         horario: `${inicio}-${fim}`, // Ex: "12:00-13:00"
       },
     });
@@ -464,7 +586,7 @@ export const criarIndisponibilidadeGlobal = async (
     // Cria a indisponibilidade global
     const indisponibilidade = await prisma.indisponibilidade.create({
       data: {
-        data: data ? new Date(data) : null, // Se a data não for fornecida, será null (indisponibilidade global)
+        data: data ? new Date(new Date(data).toISOString().split('T')[0]) : null, // Se a data não for fornecida, será null (indisponibilidade global)
         horario: `${inicio}-${fim}`, // Ex: "12:00-13:00"
         motivo: motivo || "Unavailable time", // Motivo padrão
         empresaId,
@@ -521,4 +643,39 @@ export const removerIndisponibilidade = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error removing unavailability" });
   }
 };
+//listar indisponibilidades da empresa logada
+export const listarIndisponibilidades = async (req: Request, res: Response) => {
+  try {
+    const empresaId = (req as any).usuario.id; // Obtém o ID da empresa do token
+
+    if (!empresaId) {
+      res.status(401).json({ error: "Company not found in token" });
+      return;
+    }
+
+    // Obtém todas as indisponibilidades da empresa
+    const indisponibilidades = await prisma.indisponibilidade.findMany({
+      where: {
+        empresaId,
+      },
+      orderBy: {
+        data: "asc",
+      },
+    });
+
+    if (indisponibilidades.length === 0) {
+      res.status(404).json({
+        message: "No unavailability found for this company.",
+      });
+      return;
+    }
+
+    res.status(200).json(indisponibilidades);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error listing unavailability." });
+  }
+};
+
+//listar todas as indisponibilidades
 

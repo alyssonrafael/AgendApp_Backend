@@ -6,6 +6,8 @@ import {
   criarIndisponibilidadeGlobal,
   listarGradeHorarios,
   listarHorariosDisponiveis,
+  listarHorariosDisponiveisEmpresaLogada,
+  listarIndisponibilidades,
   removerDiaGradeHorario,
   removerIndisponibilidade,
 } from "../controllers/gradeHorariosController";
@@ -32,6 +34,8 @@ router.post(
 router.get("/grade-horarios", autenticarToken, listarGradeHorarios);
 //rota de listagem de horarios disponiveis
 router.get("/horarios-disponiveis", autenticarToken, listarHorariosDisponiveis);
+//rota de listagem da empresa logada
+router.get("/horarios-disponiveis-empresa", autenticarToken, listarHorariosDisponiveisEmpresaLogada);
 //rota de adição de dias na grade de horario
 router.post(
   "/grade-horario/adicionar-dias",
@@ -68,5 +72,7 @@ router.delete(
   validarRemocaoIndisponibilidade,
   removerIndisponibilidade
 );
+router.get(
+  "/indisponibilidade-empresa",autenticarToken, listarIndisponibilidades)
 
 export default router;
