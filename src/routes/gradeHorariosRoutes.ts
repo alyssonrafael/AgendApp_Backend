@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   adicionarDiasGradeHorario,
+  atualizarGradeHorario,
   atualizarHorariosGradeHorario,
   criarGradeHorario,
   criarIndisponibilidadeGlobal,
@@ -30,6 +31,8 @@ router.post(
   validarEntradaGradeHorario,
   criarGradeHorario
 );
+// rota de atualizaçao de horario e intervalo com base no id da grade
+router.put("/grade-horario/:id",autenticarToken,validarHorariosGradeHorario, atualizarGradeHorario)
 //rota de listagem de grade de horarios
 router.get("/grade-horarios", autenticarToken, listarGradeHorarios);
 //rota de listagem de horarios disponiveis

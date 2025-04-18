@@ -138,10 +138,10 @@ export const validarRemocaoDiaGradeHorario = (
   const { diaSemana } = req.body;
 
   // Verifica se diaSemana está presente
-  if (!diaSemana) {
-    res.status(400).json({ error: "Weekday is required ex: 1 or 2" });
-    return;
-  }
+if (diaSemana === undefined || diaSemana === null) {
+  res.status(400).json({ error: "Weekday is required ex: 1 or 2" });
+  return;
+}
 
   // Verifica se diaSemana é um número
   if (typeof diaSemana !== "number") {

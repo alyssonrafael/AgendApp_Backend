@@ -13,7 +13,7 @@ export const criarGradeHorario = async (req: Request, res: Response) => {
       res.status(401).json({ error: "Company not found in token" });
       return;
     }
-    
+
     // Verifica se a grade já existe para algum dos dias informados
     const gradeExistente = await prisma.gradeHorario.findMany({
       where: {
@@ -54,6 +54,47 @@ export const criarGradeHorario = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error creating Timetable Grid" });
   }
 };
+// Atualizar Grade de Horário especifica com base no id
+export const atualizarGradeHorario = async (req: Request, res: Response) => {
+  try {
+    const empresaId = (req as any).usuario.id;
+    const { id } = req.params;
+    const { inicio, fim, intervalo } = req.body;
+
+    if (!empresaId) {
+      res.status(401).json({ error: "Company not found in token" });
+      return;
+    }
+
+    const grade = await prisma.gradeHorario.findUnique({
+      where: { id },
+    });
+
+    if (!grade || grade.empresaId !== empresaId) {
+      res.status(404).json({ error: "Timetable not found or unauthorized" });
+      return;
+    }
+
+    const gradeAtualizada = await prisma.gradeHorario.update({
+      where: { id },
+      data: {
+        inicio,
+        fim,
+        intervalo,
+      },
+    });
+
+    res.status(200).json({
+      message: "Timetable updated successfully",
+      grade: gradeAtualizada,
+    });
+    return;
+  } catch (error) {
+    console.error("Erro ao atualizar grade:", error);
+    res.status(500).json({ error: "Error updating Timetable Grid" });
+    return;
+  }
+};
 // Função para listar a Grade de Horários
 export const listarGradeHorarios = async (req: Request, res: Response) => {
   try {
@@ -87,7 +128,7 @@ export const listarGradeHorarios = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error listing timetable." });
   }
 };
-// Função para listar os horários disponíveis da empresa logada 
+// Função para listar os horários disponíveis da empresa logada
 export const listarHorariosDisponiveisEmpresaLogada = async (
   req: Request,
   res: Response
@@ -499,39 +540,37 @@ const verificarAgendamentosFuturos = async (
   empresaId: string,
   diaSemana?: number
 ) => {
-  const whereClause: any = {
-    servico: {
-      empresaId: empresaId, // Filtra pelo ID da empresa através da relação com Servico
-    },
-    data: {
-      gte: new Date(), // Agendamentos a partir de agora
-    },
-  };
+  if (diaSemana === undefined) return false;
 
-  if (diaSemana !== undefined) {
-    // Filtra por dia da semana (0 = domingo, 1 = segunda, etc.)
-    whereClause.data = {
-      ...whereClause.data,
-      // Converte o dia da semana para uma data específica
-      gte: new Date(
-        new Date().setDate(
-          new Date().getDate() - new Date().getDay() + diaSemana
-        )
-      ),
-      lt: new Date(
-        new Date().setDate(
-          new Date().getDate() - new Date().getDay() + diaSemana + 1
-        )
-      ),
-    };
-  }
+  const hoje = new Date();
+  hoje.setUTCHours(0, 0, 0, 0); // Zera para início do dia em UTC
+
+  const diasParaAdicionar = (diaSemana - hoje.getUTCDay() + 7) % 7;
+  const proximoDia = new Date(hoje);
+  proximoDia.setUTCDate(hoje.getUTCDate() + diasParaAdicionar);
+
+  const inicioDia = new Date(proximoDia);
+  inicioDia.setUTCHours(0, 0, 0, 0);
+
+  const fimDia = new Date(proximoDia);
+  fimDia.setUTCHours(23, 59, 59, 999);
 
   const agendamentos = await prisma.agendamento.findMany({
-    where: whereClause,
+    where: {
+      servico: {
+        empresaId,
+      },
+      data: {
+        gte: inicioDia,
+        lte: fimDia,
+      },
+    },
+    take: 1,
   });
 
-  return agendamentos.length > 0; // Retorna true se houver agendamentos futuros
+  return agendamentos.length > 0;
 };
+
 // Função para criar uma indisponibilidade global
 export const criarIndisponibilidadeGlobal = async (
   req: Request,
@@ -548,11 +587,11 @@ export const criarIndisponibilidadeGlobal = async (
 
     // Verifica se já existe uma indisponibilidade com a mesma data e horário
     const indisponibilidadeExistente = await prisma.indisponibilidade.findFirst({
-      where: {
-        empresaId,
+        where: {
+          empresaId,
         data: data ? new Date(new Date(data).toISOString().split('T')[0]) : null, // Se a data não for fornecida, será null (indisponibilidade global)
-        horario: `${inicio}-${fim}`, // Ex: "12:00-13:00"
-      },
+          horario: `${inicio}-${fim}`, // Ex: "12:00-13:00"
+        },
     });
 
     if (indisponibilidadeExistente) {
@@ -571,11 +610,11 @@ export const criarIndisponibilidadeGlobal = async (
     // Função para verificar sobreposição de horários
     const horariosSobrepostos = indisponibilidadesGlobais.some((indisponibilidade) => {
       const [inicioExistente, fimExistente] = indisponibilidade.horario.split('-');
-      return (
-        (inicio >= inicioExistente && inicio < fimExistente) || // Novo início dentro de um intervalo existente
+        return (
+          (inicio >= inicioExistente && inicio < fimExistente) || // Novo início dentro de um intervalo existente
         (fim > inicioExistente && fim <= fimExistente) ||       // Novo fim dentro de um intervalo existente
         (inicio <= inicioExistente && fim >= fimExistente)      // Novo intervalo cobre completamente um intervalo existente
-      );
+        );
     });
 
     if (horariosSobrepostos) {
