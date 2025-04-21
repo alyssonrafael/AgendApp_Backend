@@ -287,6 +287,7 @@ export const listarAgendamentosPorUsuario = async (
           nomeEmpresa: agendamento.servico.empresa.nomeEmpresa,
           email:agendamento.servico.empresa.email,
           telefone:agendamento.servico.empresa.phoneNumber,
+          endereco:agendamento.servico.empresa.address
         },
       },
     }));
@@ -414,6 +415,7 @@ export const listarAgendamentosFuturosPorUsuario = async (
           nomeEmpresa: agendamento.servico.empresa.nomeEmpresa,
           email:agendamento.servico.empresa.email,
           telefone:agendamento.servico.empresa.phoneNumber,
+          endereco:agendamento.servico.empresa.address
         },
       },
     }));
@@ -505,6 +507,7 @@ export const listarAgendamentosDoDiaPorUsuario = async (
           nomeEmpresa: agendamento.servico.empresa.nomeEmpresa,
           email:agendamento.servico.empresa.email,
           telefone:agendamento.servico.empresa.phoneNumber,
+          endereco:agendamento.servico.empresa.address
         },
       },
     }));
