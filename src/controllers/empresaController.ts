@@ -169,3 +169,27 @@ export const getEmpresa = async (
     res.status(500).json({ error: "Internal server error" });
   }
 }
+// lista todas as empresas
+export const listEmpresas = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const empresas = await prisma.empresa.findMany({
+      select: {
+        id: true,
+        nomeEmpresa: true,
+        image: true,
+        description: true,
+        address: true,
+        phoneNumber: true,
+        email:true,
+      },
+      orderBy: {
+        nomeEmpresa: 'asc' // Ordenação alfabética
+      }
+    });
+
+    res.status(200).json(empresas);
+  } catch (error) {
+    console.error("Error fetching empresas:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
