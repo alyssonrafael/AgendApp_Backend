@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getEmpresa,
+  getEmpresaById,
   listEmpresas,
   updateEmpresa,
   uploadFotoEmpresa,
@@ -17,5 +18,8 @@ router.put("/update/company", autenticarToken, validarEntradaUpdateEmpresa, upda
 router.post("/company/upload-foto", autenticarToken, uploadFotoMiddleware, uploadFotoEmpresa);
 // rota para listagem de todas as empresas rota a ser usada por clentes
 router.get("/companies", autenticarToken, listEmpresas)
+//listar apenas a empresa pelo id fornecido usado por clientes
+router.get("/companies/:id", autenticarToken, getEmpresaById)
+
 
 export default router;

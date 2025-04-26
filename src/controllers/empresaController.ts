@@ -193,3 +193,52 @@ export const listEmpresas = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ error: "Internal server error" });
   }
 }
+//listar a empresa com base no id fornecido
+export const getEmpresaById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params; // Obtém o ID dos parâmetros da rota
+
+    if (!id) {
+       res.status(400).json({ error: "ID da empresa é obrigatório" });
+       return
+    }
+
+    const empresa = await prisma.empresa.findUnique({
+      where: {
+        id: String(id)
+      },
+      select: {
+        id: true,
+        nomeEmpresa: true,
+        image: true,
+        description: true,
+        address: true,
+        phoneNumber: true,
+        email: true,
+        createdAt:true,
+        servicos: {
+          where: {
+            ativo: true
+          },
+          select: {
+            id: true,
+            nome: true,
+            descricao: true,
+            custo: true,
+            duracao: true
+          }
+        }
+      }
+    });
+
+    if (!empresa) {
+      res.status(404).json({ error: "Empresa não encontrada" });
+      return;
+    }
+
+    res.status(200).json(empresa);
+  } catch (error) {
+    console.error("Error fetching empresa:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
