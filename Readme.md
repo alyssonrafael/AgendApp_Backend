@@ -246,3 +246,8 @@ O inicio do endpoit é sempre o mesmo `http://localhost:3333/api` (ou na porta c
 ### 🔒 Todas as rotas (exceto as de auth) requerem autenticação via token JWT.
 
 O token deve ser enviado no **header** `Authorization`, contendo **apenas o token** (sem o prefixo `Bearer`).
+
+### 🖼️ A uma pasta publica com todas as imagens de banner das empresas você pode acessar pela url abaixo basta copiar, colar e alterar o nome do arquivo para um correspondente na sua pasta
+
+ `http://localhost:3333/uploads/"nome-do-arquivo-da-imagem"`
+
